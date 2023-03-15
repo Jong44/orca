@@ -30,7 +30,7 @@ class _LoginState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.network("https://firebasestorage.googleapis.com/v0/b/forum-40aed.appspot.com/o/asset%2Flogo_login.png?alt=media&token=d3c963d4-2947-4c1a-bb2a-7c92a9547fe3"),
+            Image.asset('assets/logo.png'),
             Text(
               "O.R.C.A",
               style: TextStyle(

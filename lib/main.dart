@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
@@ -7,7 +8,9 @@ import 'package:orca/screen/LoginScreen.dart';
 import 'package:orca/screen/ProfileScreen.dart';
 import 'package:orca/screen/SplashScreeen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 

@@ -1,6 +1,13 @@
+import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:orca/screen/EditProfile.dart';
+import 'package:path/path.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -10,283 +17,330 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getData();
+  }
+
+  final userId = FirebaseAuth.instance.currentUser!.uid;
+  final fDatabaseProfile = FirebaseDatabase.instance.ref().child('user');
+
+  bool loading = false;
+  String? username;
+
+
+
+  Future<void> getData() async {
+    setState(() {
+      loading = true;
+    });
+
+    var user = await FirebaseAuth.instance.currentUser!;
+
+    var name = await fDatabaseProfile.child(user.uid).child('profile').child(
+        'username').once();
+
+    setState(() {
+      username = name.snapshot.value.toString();
+    });
+
+    setState(() {
+      loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: loading
+          ? Center(child: CircularProgressIndicator(),)
+          : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.only(left: 25, right: 25, top: 70),
-            height: 300,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                          color: Colors.black,
-                          shape: BoxShape.circle
-                      ),
-                    ),
-                    SizedBox(width: 20,),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 20,),
-                        Text("Hallo,", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),),
-                        Text("SoulMaster69", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),)
-                      ],
-                    )
-                  ],
-                ),
-                SizedBox(height: 20,),
-                Text(
-                  "Alex",
-                  style: TextStyle(
-                      fontSize: 15,
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
-                SizedBox(height: 50,),
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: (){
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => EditProfile())
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        alignment: Alignment.center,
-                        margin: EdgeInsets.only(right: 10),
-                        width: 290,
-                        height: 40,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(width: 1, color: Colors.black38)
-                        ),
-                        child: Text(
-                          "Edit Profile",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold
-                          ),
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: (){},
-                      child: Container(
-                        alignment: Alignment.center,
-                        padding: EdgeInsets.only(right: 20),
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(width: 1, color: Colors.black38)
-                        ),
-                        child: Icon(
-                          Iconsax.setting_25,
-                          size: 20,
-                        ),
-                      ),
-                    )
-                  ],
-                )
-              ],
-            )
-          ),
-          Container(
-            height: 420,
-            child: DefaultTabController(
-              length: 2,
+              padding: EdgeInsets.only(left: 25, right: 25, top: 70),
+              height: 300,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TabBar(
-                      unselectedLabelColor: Colors.black,
-                      labelColor: Colors.black,
-                      indicatorColor: Colors.black,
-                      labelStyle: TextStyle(
-                          fontSize: 17,
-                          color: Colors.black
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                            color: Colors.black,
+                            shape: BoxShape.circle
+                        ),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      tabs: [
-                        Tab(icon: Icon(Icons.list),),
-                        Tab(icon: Icon(Icons.bookmark_border),),
-                      ]
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    height: 372,
-                    child: TabBarView(
+                      SizedBox(width: 20,),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ListView.builder(
-                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              itemCount: 4,
-                              itemExtent: 360,
-                              itemBuilder: (context, index){
-                                return Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                                  margin: EdgeInsets.only(bottom: 10),
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                            spreadRadius: 1,
-                                            offset: Offset(1,0.5),
-                                            color: Colors.grey.shade400,
-                                            blurRadius: 3
-                                        )
-                                      ]
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text("SoulMaster69", style: TextStyle(color: Colors.grey),)
-                                        ],
-                                      ),
-                                      SizedBox(height: 10,),
-                                      Text("Dek Clash Royale Terkuat Era Ini", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
-                                      SizedBox(height: 10,),
-                                      Row(
-                                        children: [
-                                          Icon(Iconsax.clock, size: 17,),
-                                          SizedBox(width: 5,),
-                                          Text("28 Februari 2022", style: TextStyle(fontSize: 13),)
-                                        ],
-                                      ),
-                                      SizedBox(height: 10,),
-                                      Container(
-                                        margin: EdgeInsets.only(bottom: 10),
-                                        height: 190,
-                                        decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            image: DecorationImage(
-                                                image: NetworkImage("https://firebasestorage.googleapis.com/v0/b/forum-40aed.appspot.com/o/asset%2Fimage%206.png?alt=media&token=f6015920-a79d-44ba-ab74-47a620f55b07"),
-                                                fit: BoxFit.fill
-                                            )
-                                        ),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          InkWell(
-                                            child: Row(
-                                              children: [
-                                                Icon(Iconsax.message),
-                                                SizedBox(width: 5,),
-                                                Text("25", style: TextStyle(fontSize: 14),)
-                                              ],
-                                            ),
-                                          ),
-                                          InkWell(
-                                            child: Icon(Icons.bookmark_border),
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                );
-                              }
+                          SizedBox(height: 20,),
+                          Text("Hallo,", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),),
+                          Text(username!, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),)
+                        ],
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 20,),
+                  SizedBox(height: 50,),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                        onTap: (){
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => EditProfile())
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(right: 10),
+                          height: 40,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(width: 1, color: Colors.black38)
                           ),
-                          ListView.builder(
-                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              itemCount: 4,
-                              itemExtent: 360,
-                              itemBuilder: (context, index){
-                                return Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                                  margin: EdgeInsets.only(bottom: 10),
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                            spreadRadius: 1,
-                                            offset: Offset(1,0.5),
-                                            color: Colors.grey.shade400,
-                                            blurRadius: 3
-                                        )
-                                      ]
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text("SoulMaster69", style: TextStyle(color: Colors.grey),)
-                                        ],
-                                      ),
-                                      SizedBox(height: 10,),
-                                      Text("Dek Clash Royale Terkuat Era Ini", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
-                                      SizedBox(height: 10,),
-                                      Row(
-                                        children: [
-                                          Icon(Iconsax.clock, size: 17,),
-                                          SizedBox(width: 5,),
-                                          Text("28 Februari 2022", style: TextStyle(fontSize: 13),)
-                                        ],
-                                      ),
-                                      SizedBox(height: 10,),
-                                      Container(
-                                        margin: EdgeInsets.only(bottom: 10),
-                                        height: 190,
-                                        decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            image: DecorationImage(
-                                                image: NetworkImage("https://firebasestorage.googleapis.com/v0/b/forum-40aed.appspot.com/o/asset%2Fimage%206.png?alt=media&token=f6015920-a79d-44ba-ab74-47a620f55b07"),
-                                                fit: BoxFit.fill
-                                            )
-                                        ),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          InkWell(
-                                            child: Row(
-                                              children: [
-                                                Icon(Iconsax.message),
-                                                SizedBox(width: 5,),
-                                                Text("25", style: TextStyle(fontSize: 14),)
-                                              ],
-                                            ),
-                                          ),
-                                          InkWell(
-                                            child: Icon(Icons.bookmark_border),
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                );
-                              }
+                          child: Text(
+                            "Edit Profile",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold
+                            ),
                           ),
+                        ),
+                      ),
+                      ),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: (){},
+                        child: Container(
+                          alignment: Alignment.center,
+                          padding: EdgeInsets.only(right: 20),
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(width: 1, color: Colors.black38)
+                          ),
+                          child: Icon(
+                            Iconsax.setting_25,
+                            size: 20,
+                          ),
+                        ),
+                      )
+                    ],
+                  )
+                ],
+              )
+          ),
+          Expanded(
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    TabBar(
+                        unselectedLabelColor: Colors.black,
+                        labelColor: Colors.black,
+                        indicatorColor: Colors.black,
+                        labelStyle: TextStyle(
+                            fontSize: 17,
+                            color: Colors.black
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        tabs: [
+                          Tab(icon: Icon(Icons.list),),
+                          Tab(icon: Icon(Icons.bookmark_border),),
                         ]
                     ),
-                  )
+                    Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          child: TabBarView(
+                              children: [
+                                FirebaseAnimatedList(
+                                    defaultChild: Center(child: CircularProgressIndicator(),),
+                                    query: FirebaseDatabase.instance.ref().child('list_content').orderByChild('userid').equalTo(userId),
+                                    itemBuilder: (context, snapshot, animation, index){
+                                      Map content = snapshot.value as Map;
+                                      content['key'] = snapshot.key;
 
-                ],
+                                      var profile = content['userName'];
+                                      var tanggal = content['date_time'];
+                                      var image = content['image'];
+                                      var judul = content['judul_content'];
+                                      var kategori = content['kategori'];
+
+
+                                      return Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                                        margin: EdgeInsets.only(bottom: 10, left:3, right: 3, top: 2 ),
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(10),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                  spreadRadius: 1,
+                                                  offset: Offset(1,0.5),
+                                                  color: Colors.grey.shade400,
+                                                  blurRadius: 3
+                                              )
+                                            ]
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(profile, style: TextStyle(color: Colors.grey),)
+                                              ],
+                                            ),
+                                            SizedBox(height: 10,),
+                                            Text(judul, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                                            SizedBox(height: 10,),
+                                            Row(
+                                              children: [
+                                                Icon(Iconsax.clock, size: 17,),
+                                                SizedBox(width: 5,),
+                                                Text(tanggal, style: TextStyle(fontSize: 13),)
+                                              ],
+                                            ),
+                                            SizedBox(height: 10,),
+                                            Container(
+                                              margin: EdgeInsets.only(bottom: 10),
+                                              height: 190,
+                                              decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  image: DecorationImage(
+                                                      image: NetworkImage(image),
+                                                      fit: BoxFit.fill
+                                                  )
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                InkWell(
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Iconsax.message),
+                                                      SizedBox(width: 5,),
+                                                      Text("25", style: TextStyle(fontSize: 14),)
+                                                    ],
+                                                  ),
+                                                ),
+                                                InkWell(
+                                                  child: Icon(Icons.bookmark_border),
+                                                )
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                                FirebaseAnimatedList(
+                                    defaultChild: Center(child: CircularProgressIndicator(),),
+                                    query: FirebaseDatabase.instance.ref().child('user').child(userId).child('bookmark'),
+                                    itemBuilder: (context, snapshot, animation, index){
+                                      Map content = snapshot.value as Map;
+                                      content['key'] = snapshot.key;
+
+                                      var profile = content['userName'];
+                                      var tanggal = content['date_time'];
+                                      var image = content['images'];
+                                      var judul = content['judul_content'];
+                                      var kategori = content['kategori'];
+
+                                      return Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                                        margin: EdgeInsets.only(bottom: 10, left:3, right: 3, top: 2 ),
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(10),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                  spreadRadius: 1,
+                                                  offset: Offset(1,0.5),
+                                                  color: Colors.grey.shade400,
+                                                  blurRadius: 3
+                                              )
+                                            ]
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(profile, style: TextStyle(color: Colors.grey),)
+                                              ],
+                                            ),
+                                            SizedBox(height: 10,),
+                                            Text(judul, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                                            SizedBox(height: 10,),
+                                            Row(
+                                              children: [
+                                                Icon(Iconsax.clock, size: 17,),
+                                                SizedBox(width: 5,),
+                                                Text(tanggal, style: TextStyle(fontSize: 13),)
+                                              ],
+                                            ),
+                                            SizedBox(height: 10,),
+                                            Container(
+                                              margin: EdgeInsets.only(bottom: 10),
+                                              height: 190,
+                                              decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  image: DecorationImage(
+                                                      image: NetworkImage(image),
+                                                      fit: BoxFit.fill
+                                                  )
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                InkWell(
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Iconsax.message),
+                                                      SizedBox(width: 5,),
+                                                      Text("25", style: TextStyle(fontSize: 14),)
+                                                    ],
+                                                  ),
+                                                ),
+                                                InkWell(
+                                                  onTap: (){
+                                                    FirebaseDatabase.instance.ref().child('user').child(userId).child('bookmark').child(content['key']).remove();
+                                                  },
+                                                  child: Icon(Icons.bookmark, color: Colors.black,),
+                                                )
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                              ]
+                          ),
+                        )
+                    )
+
+                  ],
+                ),
               ),
-            ),
           )
         ],
       )

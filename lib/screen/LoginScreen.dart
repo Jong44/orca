@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:intl/date_symbol_data_file.dart';
+import 'package:intl/intl.dart';
 import 'package:orca/main.dart';
+import 'package:orca/service/DateFormat.dart';
 
+import '../auth/ServiceAuth.dart';
 import 'RegisterScreen.dart';
 
 
@@ -14,38 +18,70 @@ class LoginScreen extends StatefulWidget {
 class _LoginState extends State<LoginScreen> {
 
   final EmailController = TextEditingController();
-  final PasswrordController = TextEditingController();
+  final PasswordController = TextEditingController();
 
   bool hidden = true;
+
+  bool isLoading = false;
+
+  void errorAlert(BuildContext context, message){
+    AlertDialog alert = AlertDialog(
+      actionsAlignment: MainAxisAlignment.center,
+      actionsPadding: EdgeInsets.symmetric(horizontal: 15),
+      title: Text("Error"),
+      content: Container(child: Text(message, textAlign: TextAlign.center,),),
+      actions: [
+        ElevatedButton(
+          onPressed: (){
+            setState(() {
+              Navigator.pop(context);
+            });
+          },
+          child: Text("OKE", style: TextStyle(fontSize: 12),),
+          style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              fixedSize: Size(MediaQuery.of(context).size.width, 20)
+          ),
+        )
+      ],
+    );
+
+    showDialog(context: context, builder: (context) => alert);
+    return;
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 100),
-        child: ListView(
-          children: [
-            Center(
-              child: Image.network("https://firebasestorage.googleapis.com/v0/b/forum-40aed.appspot.com/o/asset%2Flogo_login.png?alt=media&token=d3c963d4-2947-4c1a-bb2a-7c92a9547fe3", alignment: Alignment.center,),
+      body: ListView(
+        padding: EdgeInsets.symmetric(horizontal: 40),
+        children: [
+          SizedBox(height: 120,),
+          Center(
+            child: Image.asset("assets/logo.png", alignment: Alignment.center,),
+          ),
+          SizedBox(height: 50,),
+          Text(
+            "Log In",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 30,
             ),
-            SizedBox(height: 50,),
-            Text(
-              "Log In",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 30,
-              ),
-            ),
-            SizedBox(height: 30,),
-            Row(
+          ),
+          SizedBox(height: 30,),
+          Container(
+            width: double.infinity,
+            height: 60,
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(Icons.email_outlined, size: 20,),
                 SizedBox(width: 10,),
-                Container(
-                  width: 270,
-                  height: 60,
+                Expanded(
                   child: TextField(
+                    controller: EmailController,
                     decoration: InputDecoration(
                         hintText: "Email"
                     ),
@@ -53,15 +89,18 @@ class _LoginState extends State<LoginScreen> {
                 )
               ],
             ),
-            Row(
+          ),
+          Container(
+            width: double.infinity,
+            height: 60,
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(Icons.lock_outline, size: 20,),
                 SizedBox(width: 10,),
-                SizedBox(
-                  width: 270,
-                  height: 60,
+                Expanded(
                   child: TextField(
+                    controller: PasswordController,
                     obscureText: hidden,
                     decoration: InputDecoration(
                         hintText: "Password",
@@ -72,9 +111,9 @@ class _LoginState extends State<LoginScreen> {
                             });
                           },
                           icon: Icon(
-                            hidden == true
-                                ? CupertinoIcons.eye_slash
-                                : CupertinoIcons.eye
+                              hidden == true
+                                  ? CupertinoIcons.eye_slash
+                                  : CupertinoIcons.eye
                           ),
                         )
                     ),
@@ -82,45 +121,69 @@ class _LoginState extends State<LoginScreen> {
                 )
               ],
             ),
-           SizedBox(height: 40),
-           InkWell(
-             onTap: (){
-               Navigator.push(
-                   context, 
-                   MaterialPageRoute(builder: (context) => MyHomePage())
-               );
-                   
-             },
-             child:
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 70),
-                   alignment: Alignment.center,
-                   height: 40,
-                   decoration: BoxDecoration(
-                     color: Colors.blue,
-                     borderRadius: BorderRadius.circular(10)
-                   ),
-                   child: Text("Login", style: TextStyle(color: Colors.white),),
-             ),
-           ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Kamu belum punya akun?"),
-                TextButton(
-                    onPressed: (){
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => RegisterScreen())
-                      );
-                    },
-                    child: Text("Sign Up")
+          ),
+          SizedBox(height: 40),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 50),
+            child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    maximumSize: Size(70, 60)
+                ),
+                onPressed: () async {
+                  setState(() {
+                    isLoading = true;
+                  });
+                  final message = await AuthService().login(
+                      email: EmailController.text,
+                      password: PasswordController.text
+                  );
+                  if(message!.contains('Success')){
+                    await Future.delayed(Duration(seconds: 3));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyHomePage())
+                    );
+                  } else {
+                    errorAlert(context, message);
+                  }
+
+                  setState(() {
+                    isLoading = false;
+                  });
+                },
+                child: isLoading
+                    ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white,)
+                    ),
+                    const SizedBox(width: 20,),
+                    Text("Mohon Tunggu...", style: TextStyle(color: Colors.white),)
+                  ],
                 )
-              ],
+                    : Text("Login", style: TextStyle(color: Colors.white))
             ),
-          ],
-        ),
-      )
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Kamu belum punya akun?"),
+              TextButton(
+                  onPressed: (){
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterScreen())
+                    );
+                  },
+                  child: Text("Sign Up")
+              )
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

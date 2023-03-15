@@ -1,6 +1,14 @@
+import 'dart:io';
+import 'dart:async';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:orca/service/DateFormat.dart';
+import 'package:path/path.dart';
 
 
 class AddScreen extends StatefulWidget {
@@ -11,9 +19,48 @@ class AddScreen extends StatefulWidget {
 
 class _AddState extends State<AddScreen> {
 
-  String dropdownValue = 'Option 1';
+  File? image;
 
+  String dropdownValue = 'Semua';
+  final fDatabaseContent = FirebaseDatabase.instance.ref().child("list_content");
 
+  var JudulController = TextEditingController();
+  var DeskripsiController = TextEditingController();
+
+  Future openGaleri() async {
+    final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+    setState(() {
+      image = File(pickedImage!.path);
+    });
+    uploadFotoProfile();
+  }
+
+  Future uploadFotoProfile() async {
+    String fileName = basename(image!.path);
+    await FirebaseStorage.instance.ref().child('content/$fileName').putFile(image!);
+    var url = await FirebaseStorage.instance.ref().child('content/$fileName').getDownloadURL();
+    setState(() {
+      urlImage = url.toString();
+    });
+  }
+
+  String? urlImage;
+
+  Future<void> saveData() async {
+
+    var user = await FirebaseAuth.instance.currentUser!;
+
+    fDatabaseContent.push().set({
+      'userid' : user.uid.toString(),
+      'userName' : ""  ,
+      'judul_content' : JudulController.text ,
+      'deskripsi' : DeskripsiController.text,
+      'kategori' : dropdownValue  ,
+      'image' : urlImage  ,
+      'date_time' : DateFormatter.formatDate(DateTime.now())  ,
+      'comment' : ""  ,
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +79,9 @@ class _AddState extends State<AddScreen> {
                     borderRadius: BorderRadius.circular(10)
                   )
                 ),
-                onPressed: (){},
+                onPressed: (){
+                  saveData();
+                },
                 child: Text("Share")
             ),
           )
@@ -40,19 +89,28 @@ class _AddState extends State<AddScreen> {
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 25, vertical: 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
           children: [
             InkWell(
-              onTap: (){},
+              onTap: (){
+                openGaleri();
+              },
               child: DottedBorder(
                   strokeWidth: 1,
                   child: Container(
                     width: double.infinity,
                     height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20)
+                    decoration: image == null
+                        ? BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                        )
+                        : BoxDecoration(
+                      image: DecorationImage(
+                        image: FileImage(image!),
+                        fit: BoxFit.cover
+                      )
                     ),
+
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -84,7 +142,7 @@ class _AddState extends State<AddScreen> {
                         dropdownValue = newValue!;
                       });
                     },
-                    items: <String>['Option 1', 'Option 2', 'Option 3']
+                    items: <String>['Semua','Games', 'Sports', 'Traveling', 'Food']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -98,6 +156,7 @@ class _AddState extends State<AddScreen> {
               width: double.infinity,
               height: 20,
               child: TextField(
+                controller: JudulController,
                 decoration: InputDecoration(
                   hintText: "Judul"
                 ),
@@ -108,6 +167,7 @@ class _AddState extends State<AddScreen> {
               width: double.infinity,
               height: 20,
               child: TextField(
+                controller: DeskripsiController,
                 decoration: InputDecoration(
                     hintText: "Deskripsi"
                 ),
