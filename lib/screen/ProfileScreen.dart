@@ -4,10 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:orca/screen/CommentScreen.dart';
 import 'package:orca/screen/EditProfile.dart';
 import 'package:path/path.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
+import 'package:flutter/cupertino.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -29,6 +31,7 @@ class _ProfileState extends State<ProfileScreen> {
 
   bool loading = false;
   String? username;
+  String? image;
 
 
 
@@ -41,14 +44,35 @@ class _ProfileState extends State<ProfileScreen> {
 
     var name = await fDatabaseProfile.child(user.uid).child('profile').child(
         'username').once();
+    var images = await fDatabaseProfile.child(user.uid).child('profile').child(
+        'images').once();
 
     setState(() {
       username = name.snapshot.value.toString();
+      image = images.snapshot.value.toString();
     });
 
     setState(() {
       loading = false;
     });
+  }
+
+  void successAlert(BuildContext context) {
+    AlertDialog alert = AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      title: Icon(Icons.check_circle, color: Colors.green, size: 50),
+      content: Text("Sukses Menyimpan"),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text('OK'),
+        ),
+      ],
+    );
   }
 
   @override
@@ -74,7 +98,11 @@ class _ProfileState extends State<ProfileScreen> {
                         height: 90,
                         decoration: BoxDecoration(
                             color: Colors.black,
-                            shape: BoxShape.circle
+                            shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage(image!),
+                            fit: BoxFit.cover
+                          )
                         ),
                       ),
                       SizedBox(width: 20,),
@@ -120,10 +148,14 @@ class _ProfileState extends State<ProfileScreen> {
                       ),
                       InkWell(
                         borderRadius: BorderRadius.circular(10),
-                        onTap: (){},
+                        onTap: () async {
+                          Navigator.pop(context);
+                        },
                         child: Container(
                           alignment: Alignment.center,
-                          padding: EdgeInsets.only(right: 20),
+                          padding: EdgeInsets.only(
+                            right: 5
+                          ),
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
@@ -131,7 +163,7 @@ class _ProfileState extends State<ProfileScreen> {
                               border: Border.all(width: 1, color: Colors.black38)
                           ),
                           child: Icon(
-                            Iconsax.setting_25,
+                            Iconsax.logout5,
                             size: 20,
                           ),
                         ),
@@ -176,7 +208,7 @@ class _ProfileState extends State<ProfileScreen> {
                                       var tanggal = content['date_time'];
                                       var image = content['image'];
                                       var judul = content['judul_content'];
-                                      var kategori = content['kategori'];
+                                      var comment = content['comment'];
 
 
                                       return Container(
@@ -199,10 +231,17 @@ class _ProfileState extends State<ProfileScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(profile, style: TextStyle(color: Colors.grey),)
+                                                Text(profile, style: TextStyle(color: Colors.grey),),
+                                                InkWell(
+                                                  onTap: () async {
+                                                    await FirebaseDatabase.instance.ref().child('list_content').child(content['key']).remove();
+                                                    successAlert(context);
+                                                  },
+                                                  child: Icon(CupertinoIcons.trash_circle_fill, size: 25,),
+                                                )
                                               ],
                                             ),
                                             SizedBox(height: 10,),
@@ -231,11 +270,14 @@ class _ProfileState extends State<ProfileScreen> {
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 InkWell(
+                                                  onTap: (){
+                                                    Navigator.push(context, MaterialPageRoute(builder: (context) => Comment(keys: content['key'],)));
+                                                  },
                                                   child: Row(
                                                     children: [
                                                       Icon(Iconsax.message),
                                                       SizedBox(width: 5,),
-                                                      Text("25", style: TextStyle(fontSize: 14),)
+                                                      Text(comment == null ? "0" : comment.length.toString(), style: TextStyle(fontSize: 14),)
                                                     ],
                                                   ),
                                                 ),
@@ -259,7 +301,7 @@ class _ProfileState extends State<ProfileScreen> {
                                       var tanggal = content['date_time'];
                                       var image = content['images'];
                                       var judul = content['judul_content'];
-                                      var kategori = content['kategori'];
+                                      var comment = content['comment'];
 
                                       return Container(
                                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -313,11 +355,14 @@ class _ProfileState extends State<ProfileScreen> {
                                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 InkWell(
+                                                  onTap: (){
+                                                    Navigator.push(context, MaterialPageRoute(builder: (context) => Comment(keys: content['key'],)));
+                                                  },
                                                   child: Row(
                                                     children: [
                                                       Icon(Iconsax.message),
                                                       SizedBox(width: 5,),
-                                                      Text("25", style: TextStyle(fontSize: 14),)
+                                                      Text(comment == null ? "0" : comment.length.toString(), style: TextStyle(fontSize: 14),)
                                                     ],
                                                   ),
                                                 ),
@@ -337,7 +382,6 @@ class _ProfileState extends State<ProfileScreen> {
                           ),
                         )
                     )
-
                   ],
                 ),
               ),

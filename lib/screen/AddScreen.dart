@@ -48,19 +48,44 @@ class _AddState extends State<AddScreen> {
 
   Future<void> saveData() async {
 
-    var user = await FirebaseAuth.instance.currentUser!;
+    var user = await FirebaseAuth.instance.currentUser!; 
+    var username = await FirebaseDatabase.instance.ref().child('user').child(user.uid).child('profile').child('username').once();
 
     fDatabaseContent.push().set({
       'userid' : user.uid.toString(),
-      'userName' : ""  ,
+      'userName' : username.snapshot.value.toString(),
       'judul_content' : JudulController.text ,
       'deskripsi' : DeskripsiController.text,
       'kategori' : dropdownValue  ,
       'image' : urlImage  ,
       'date_time' : DateFormatter.formatDate(DateTime.now())  ,
-      'comment' : ""  ,
+      'comment' : {}  ,
     });
+
   }
+
+  void successAlert(BuildContext context) {
+    AlertDialog alert = AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      title: Icon(Icons.check_circle, color: Colors.green, size: 50),
+      content: Text("Sukses Menyimpan"),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text('OK'),
+        ),
+      ],
+    );
+
+    showDialog(context: context, builder: (context) => alert);
+    return;
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +106,7 @@ class _AddState extends State<AddScreen> {
                 ),
                 onPressed: (){
                   saveData();
+                  successAlert(context);
                 },
                 child: Text("Share")
             ),
@@ -165,11 +191,12 @@ class _AddState extends State<AddScreen> {
             SizedBox(height: 40,),
             Container(
               width: double.infinity,
-              height: 20,
+              height: 70,
               child: TextField(
                 controller: DeskripsiController,
+                maxLines: 2,
                 decoration: InputDecoration(
-                    hintText: "Deskripsi"
+                    hintText: "Deskripsi",
                 ),
               ),
             )

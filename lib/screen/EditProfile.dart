@@ -96,6 +96,27 @@ class _EditState extends State<EditProfile> {
     getData();
   }
 
+  void successAlert(BuildContext context){
+    AlertDialog alert = AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      title: Icon(Icons.check_circle, color: Colors.green, size: 50),
+      content: Text("Sukses Menyimpan"),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text('OK'),
+        ),
+      ],
+    );
+
+    showDialog(context: context, builder: (context) => alert);
+    return;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -238,6 +259,7 @@ class _EditState extends State<EditProfile> {
                     ),
                     onPressed: (){
                       saveData();
+                      successAlert(context);
                     },
                     child: Text("Save")
                 )
